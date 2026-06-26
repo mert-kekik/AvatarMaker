@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    
+    <title>Avatar Tasarım</title> 
+    
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+            text-align: center;
+            font-family: sans-serif;
+            margin-top: 20px;
+        }
+        
+        canvas {
+            border: 2px solid black;
+            /* Dokunmatik ekranda çizerken sayfanın kaymasını engeller */
+            touch-action: none; 
+        }
+
+        #alt_panel {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Renk paleti ile buton arasındaki boşluk */
+        }
+
+        #renkpaleti {
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #indirBtn {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #indirBtn:active {
+            background-color: #45a049; /* Tıklanınca rengi hafif koyulaşır */
+        }
+    </style>
+</head> 
+    
+<body>
+    <h3>Piksel Piksel Harika Avatarını Tasarla</h3>
+    
+    <canvas id="cizim_tahtasi" width="320" height="320"></canvas>
+    
+    <div id="alt_panel">
+        <input type="color" id="renkpaleti" value="#000000">
+        <button id="indirBtn">Avatarı İndir</button>
+    </div>
+    
+    <script>
+        // 1. Canvas ve Elemanları Seçmek
+        const canvas = document.getElementById("cizim_tahtasi");
+        const ctx = canvas.getContext("2d");
+        const renkPaleti = document.getElementById("renkpaleti");
+        const indirBtn = document.getElementById("indirBtn");
+
+        // 2. Değişkenleri Tanımlamak
+        const KARE_BOYUTU = 10;
+        let cizimYapiliyor = false;
+
+        // 3. Çizgilerin Rengini Ayarlamak (Açık Gri)
+        ctx.strokeStyle = "#e0e0e0";
+        ctx.lineWidth = 1;
+
+        // 4. Döngü ile Izgarayı Çizmek
+        for (let i = 0; i <= canvas.width; i += KARE_BOYUTU) {
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.moveTo(0, i);
+            ctx.lineTo(canvas.width, i);
+        }
+        ctx.stroke();
+
+        // 5. Ortak Boyama Fonksiyonu
+        function koordinatAlVeBoya(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            const kareX = Math.floor(x / KARE_BOYUTU) * KARE_BOYUTU;
+            const kareY = Math.floor(y / KARE_BOYUTU) * KARE_BOYUTU;
+
+            if (kareX >= 0 && kareX < canvas.width && kareY >= 0 && kareY < canvas.height) {
+                ctx.fillStyle = renkPaleti.value;
+                ctx.fillRect(kareX, kareY, KARE_BOYUTU, KARE_BOYUTU);
+            }
+        }
+
+        // ==========================================
+        // MASAÜSTÜ (FARE) OLAYLARI
+        // ==========================================
+        canvas.addEventListener("mousedown", function(event) {
+            cizimYapiliyor = true;
+            koordinatAlVeBoya(event.clientX, event.clientY);
+        });
+
+        canvas.addEventListener("mousemove", function(event) {
+            if (cizimYapiliyor) {
+                koordinatAlVeBoya(event.clientX, event.clientY);
+            }
+        });
+
+        window.addEventListener("mouseup", function() {
+            cizimYapiliyor = false;
+        });
+
+        // ==========================================
+        // MOBİL (DOKUNMATİK EKRAN) OLAYLARI
+        // ==========================================
+        canvas.addEventListener("touchstart", function(event) {
+            cizimYapiliyor = true;
+            const dokunma = event.touches[0];
+            koordinatAlVeBoya(dokunma.clientX, dokunma.clientY);
+            event.preventDefault(); 
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", function(event) {
+            if (cizimYapiliyor) {
+                const dokunma = event.touches[0];
+                koordinatAlVeBoya(dokunma.clientX, dokunma.clientY);
+            }
+            event.preventDefault(); 
+        }, { passive: false });
+
+        window.addEventListener("touchend", function() {
+            cizimYapiliyor = false;
+        });
+
+        // ==========================================
+        // GÖRSELİ İNDİRME FONKSİYONU
+        // ==========================================
+        indirBtn.addEventListener("click", function() {
+            // Görünmez bir link (a etiketi) oluşturuyoruz
+            const link = document.createElement("a");
+            
+            // İndirilecek dosyanın adını belirliyoruz
+            link.download = "benim-avatarim.png";
+            
+            // Canvas'taki çizimi PNG formatında bir veri URL'sine çeviriyoruz
+            link.href = canvas.toDataURL("image/png");
+            
+            // Koda sanki bu linke tıklanmış gibi komut veriyoruz
+            link.click();
+        });
+    </script>
+</body>
+</html>
